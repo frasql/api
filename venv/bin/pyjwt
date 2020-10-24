@@ -1,4 +1,4 @@
-#!/home/francesco/Scrivania/python3/Flask/restful/restful/venv/bin/python
+#!/home/francesco/Scrivania/python3/Flask/restful/code/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

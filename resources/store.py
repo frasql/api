@@ -16,7 +16,7 @@ class Store(Resource):
                         help='Name of a store is required')
 
     @jwt_required
-    def get(self, name):
+    def get(self, name: str):
         store = StoreModel.find_by_name(name)
         if store:
             return store.json()
@@ -24,7 +24,7 @@ class Store(Resource):
         return {'message': f"Store with name '{name}' not found "}, 404
 
     @jwt_required
-    def post(self, name):
+    def post(self, name: str):
         if StoreModel.find_by_name(name):
             return {'message': f"A store named '{name}' already exists"}, 404
     
@@ -37,7 +37,7 @@ class Store(Resource):
         return store.json(), 201
 
     @jwt_required
-    def delete(self, name):
+    def delete(self, name: str):
         store = StoreModel.find_by_name(name)
         if store:
             store.delete_from_db()
@@ -45,7 +45,7 @@ class Store(Resource):
         return {'message': "Store Deleted Successfully"}
 
     @jwt_required
-    def put(self, name):
+    def put(self, name: str):
         store = StoreModel.find_by_name(name)
         if store is None:
             store = StoreModel(name)
