@@ -1,49 +1,50 @@
 from models.store import StoreModel
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 from flask_jwt_extended import jwt_required
 
 
-class Store(Resource):
-    # parse arguments
-    parser = reqparse.RequestParser()
-    parser.add_argument(
-        "name", type=str, required=True, help="Name of a store is required"
-    )
-    parser.add_argument(
-        "items", type=list, required=True, help="Name of a store is required"
-    )
+NAME_ALREADY_EXISTS = "A store with name '{}' already exists"
+ERROR_CREATING = "An error occurred creating store"
+STORE_NOT_FOUND = "Store not found"
+STORE_DELETED = "Store Successfully Deleted"
 
+
+class Store(Resource):
+    @classmethod
     @jwt_required
-    def get(self, name: str):
+    def get(cls, name: str):
         store = StoreModel.find_by_name(name)
         if store:
             return store.json()
 
-        return {"message": f"Store with name '{name}' not found "}, 404
+        return {"message": STORE_NOT_FOUND}, 404
 
+    @classmethod
     @jwt_required
-    def post(self, name: str):
+    def post(cls, name: str):
         if StoreModel.find_by_name(name):
-            return {"message": f"A store named '{name}' already exists"}, 404
+            return {"message": NAME_ALREADY_EXISTS}, 404
 
         store = StoreModel(name)
         try:
             store.save_to_db()
         except:
-            {"message": "An error occurred while creating the store"}, 500
+            {"message": ERROR_CREATING}, 500
 
         return store.json(), 201
 
+    @classmethod
     @jwt_required
-    def delete(self, name: str):
+    def delete(cls, name: str):
         store = StoreModel.find_by_name(name)
         if store:
             store.delete_from_db()
 
-        return {"message": "Store Deleted Successfully"}
+        return {"message": STORE_DELETED}
 
+    @classmethod   
     @jwt_required
-    def put(self, name: str):
+    def put(cls, name: str):
         store = StoreModel.find_by_name(name)
         if store is None:
             store = StoreModel(name)
@@ -56,6 +57,7 @@ class Store(Resource):
 
 
 class StoreList(Resource):
+    @classmethod
     @jwt_required
-    def get(self):
-        return {"stores": [x.json() for x in StoreModel.find_all()]}
+    def get(cls):
+        return {"stores": [store.json() for store in StoreModel.find_all()]}

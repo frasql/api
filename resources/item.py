@@ -10,28 +10,39 @@ from flask_jwt_extended import (
 from models.item import ItemModel
 
 
+BLANK_ERROR = "'{}' cannot be left blank."
+NAME_ALREADY_EXISTS = "An item with name '{}' already exists"
+ERROR_INSERTING = "An error occurred inserting item"
+ADMIN_REQUIRED = "Admin privileges required."
+ITEM_NOT_FOUND = "Item not found"
+ITEM_DELETED = "Item Successfully Deleted"
+DATA_AVAILABLE = "More data available if you log in."
+
+
 class Item(Resource):
     # parsing arguments
     parser = reqparse.RequestParser()
     parser.add_argument(
-        "price", type=float, required=True, help="This field cannot be left blank"
+        "price", type=float, required=True, help=BLANK_ERROR.format("price")
     )
     parser.add_argument(
-        "store_id", type=int, required=True, help="Every item needs a store id"
+        "store_id", type=int, required=True, help=BLANK_ERROR.format("store_id")
     )
 
+    @classmethod
     @jwt_required
-    def get(self, name: str):
+    def get(cls, name: str):
         item = ItemModel.find_by_name(name)
         if item:
             return item.json()
         else:
-            return {"message": "Item not found"}, 404
+            return {"message": ITEM_NOT_FOUND}, 404
 
+    @classmethod
     @fresh_jwt_required
-    def post(self, name: str):
+    def post(cls, name: str):
         if ItemModel.find_by_name(name):
-            return {"message": "Am item with name '{}' exists".format(name)}, 400
+            return {"message": NAME_ALREADY_EXISTS.format(name)}, 400
 
         data = Item.parser.parse_args()
 
@@ -40,23 +51,25 @@ class Item(Resource):
         try:
             item.save_to_db()
         except:
-            return {"message": "An error occurred inserting item"}, 500
+            return {"message": ERROR_INSERTING}, 500
 
         return item, 201
 
+    @classmethod
     @jwt_required
-    def delete(self, name: str):
+    def delete(cls, name: str):
         claims = get_jwt_claims()
         if not claims["is_admin"]:
-            return {"message": "Admin privileges required."}, 401
+            return {"message": ADMIN_REQUIRED}, 401
         item = ItemModel.find_by_name(name)
         if item:
             item.delete_from_db()
 
-        return {"message": "Item Successfully Deleted"}
+        return {"message": ITEM_DELETED}
 
+    @classmethod
     @jwt_required
-    def put(self, name: str):
+    def put(cls, name: str):
         data = Item.parser.parse_args()
 
         item = ItemModel.find_by_name(name)
@@ -72,13 +85,14 @@ class Item(Resource):
 
 
 class ItemList(Resource):
+    @classmethod
     @jwt_optional
-    def get(self):
+    def get(cls):
         user_id = get_jwt_identity()
         items = [item.json() for item in ItemModel.find_all()]
         if user_id:
             return {"items": items}, 200
         return {
             "items": [item["name"] for item in items],
-            "message": "More data available if you log in.",
+            "message": DATA_AVAILABLE,
         }, 200
