@@ -20,7 +20,7 @@ ERROR_INSERTING = "An error occurred inserting user"
 USER_NOT_FOUND = "User not found"
 USER_CREATED = "User Created Successfully"
 USER_DELETED = "User Successfully Deleted"
-USER_LOGOUT = "Successfully loggged out."
+USER_LOGOUT = "User <id={}> successfully logged out"
 INVALID_CREDENTIALS = "Invalid Credentials"
 
 
@@ -91,7 +91,8 @@ class UserLogout(Resource):
     def post(cls):
         jti = get_raw_jwt()["jti"]  # jwt id
         BLACKLIST.add(jti)
-        return {"message": USER_LOGOUT}, 200
+        user_id = get_jwt_identity()
+        return {"message": USER_LOGOUT.format(user_id)}, 200
 
 
 class TokenRefresh(Resource):
