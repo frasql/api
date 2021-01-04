@@ -1,0 +1,5 @@
+Missing:
+
+1) Email Confirm;
+2) Stripe;
+3) Hide env variables
